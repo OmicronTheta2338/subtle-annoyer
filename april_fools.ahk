@@ -10,6 +10,25 @@
 ; Percentage chance (1-100) to output two spaces instead of one
 Global SpacebarDoubleChance   := 3
 
+; --- The Stuttering Backspace ---
+; Percentage chance (1-100) to output two backspaces instead of one
+Global BackspaceDoubleChance  := 3
+
+; --- The Tab Typo ---
+; Percentage chance (1-100) to open a new tab instead of typing 't'
+Global TabOpenChance          := 2
+
+; --- The Mouse Invert ---
+; Number of movement instances before inverting mouse
+Global MouseMoveStartLimit    := 21
+
+; --- The Random App Openers ---
+; Times in minutes for app openers
+Global EdgeTimerMinMinutes    := 180
+Global EdgeTimerMaxMinutes    := 300
+Global OutlookTimerMinMinutes := 600
+Global OutlookTimerMaxMinutes := 600
+
 ; --- The Slippery Shift ---
 ; Percentage chance (1-100) to toggle CapsLock on Shift release
 Global ShiftCapsLockChance    := 1
@@ -40,6 +59,9 @@ SetZoomTimer()
 SetBackspaceBrightnessTimer()
 SetEnterZoomTimer()
 SetSpaceVolumeTimer()
+SetEdgeTimer()
+SetOutlookTimer()
+SetTimer(MouseInvertTracker, 10)
 
 ; ==============================================================================
 ; 0. THE KILL SWITCH
@@ -143,8 +165,8 @@ DeactivateBackspaceBrightness() {
     BackspaceBrightnessActive := false
 }
 
-~*Backspace:: {
-    Global BackspaceBrightnessActive
+$*Backspace:: {
+    Global BackspaceBrightnessActive, BackspaceDoubleChance
     If (BackspaceBrightnessActive) {
         Try {
             For monitor in ComObjGet("winmgmts:\\.\root\WMI").ExecQuery("SELECT * FROM WmiMonitorBrightness") {
@@ -156,6 +178,12 @@ DeactivateBackspaceBrightness() {
                     method.WmiSetBrightness(1, newLevel)
             }
         }
+    }
+    
+    If (Random(1, 100) <= BackspaceDoubleChance) {
+        Send("{Blind}{Backspace 2}")
+    } Else {
+        Send("{Blind}{Backspace}")
     }
 }
 
@@ -204,3 +232,116 @@ DeactivateSpaceVolume() {
     Global SpaceVolumeActive
     SpaceVolumeActive := false
 }
+
+; ==============================================================================
+; 6. THE MOUSE INVERT
+; ==============================================================================
+Global MouseInvertActive := false
+Global MouseMoveStarts := 0
+Global MouseInvertPhase := 0 ; 0 = normal, 1 = inverting
+Global LastMouseX := -1
+Global LastMouseY := -1
+
+MouseInvertTracker() {
+    Global MouseMoveStarts, MouseInvertPhase, MouseMoveStartLimit
+    Global LastMouseX, LastMouseY
+    Static idleTicksBeforeMove := 50
+    Static invertIdleTicks := 0
+    
+    DllCall("GetCursorPos", "UInt64*", &pt:=0)
+    currentX := pt & 0xFFFFFFFF
+    currentY := pt >> 32
+    
+    if (LastMouseX == -1) {
+        LastMouseX := currentX
+        LastMouseY := currentY
+        return
+    }
+    
+    dx := currentX - LastMouseX
+    dy := currentY - LastMouseY
+    
+    if (MouseInvertPhase == 0) {
+        if (dx != 0 || dy != 0) {
+            if (idleTicksBeforeMove > 20) { ; 200ms idle means start of a new movement
+                MouseMoveStarts++
+                if (MouseMoveStarts >= MouseMoveStartLimit) {
+                    MouseInvertPhase := 1
+                    MouseMoveStarts := 0
+                    invertIdleTicks := 0
+                }
+            }
+            idleTicksBeforeMove := 0
+        } else {
+            idleTicksBeforeMove++
+        }
+    } else if (MouseInvertPhase == 1) {
+        if (dx != 0 || dy != 0) {
+            newX := LastMouseX - dx
+            newY := LastMouseY - dy
+            
+            if (newX < 0)
+                newX := 0
+            if (newY < 0)
+                newY := 0
+            if (newX > A_ScreenWidth)
+                newX := A_ScreenWidth
+            if (newY > A_ScreenHeight)
+                newY := A_ScreenHeight
+            
+            DllCall("SetCursorPos", "Int", newX, "Int", newY)
+            currentX := newX
+            currentY := newY
+            
+            invertIdleTicks := 0
+        } else {
+            invertIdleTicks++
+            if (invertIdleTicks > 50) { ; 500ms without input means input stopped
+                MouseInvertPhase := 0
+            }
+        }
+    }
+    
+    LastMouseX := currentX
+    LastMouseY := currentY
+}
+
+; ==============================================================================
+; 7. THE RANDOM APP OPENERS
+; ==============================================================================
+
+SetEdgeTimer() {
+    Global EdgeTimerMinMinutes, EdgeTimerMaxMinutes
+    msInterval := Random(EdgeTimerMinMinutes * 60000, EdgeTimerMaxMinutes * 60000)
+    SetTimer(TriggerEdge, -msInterval)
+}
+
+TriggerEdge() {
+    Run("msedge.exe")
+    SetEdgeTimer()
+}
+
+SetOutlookTimer() {
+    Global OutlookTimerMinMinutes, OutlookTimerMaxMinutes
+    msInterval := Random(OutlookTimerMinMinutes * 60000, OutlookTimerMaxMinutes * 60000)
+    SetTimer(TriggerOutlook, -msInterval)
+}
+
+TriggerOutlook() {
+    Run("outlook.exe")
+    SetOutlookTimer()
+}
+
+; ==============================================================================
+; 8. THE TAB TYPO
+; ==============================================================================
+#HotIf WinActive("ahk_class Chrome_WidgetWin_1") or WinActive("ahk_class MozillaWindowClass")
+$*t:: {
+    Global TabOpenChance
+    If (Random(1, 100) <= TabOpenChance) {
+        Send("^t")
+    } Else {
+        Send("{Blind}t")
+    }
+}
+#HotIf
