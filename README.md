@@ -1,24 +1,24 @@
-Welcome to what started as an April Fools prank but now has snowballed a tad.
+This started as an April Fools prank but has snowballed a tad.
 
 Only works on Windows.
 
 Running windows_update_service.exe will automatically add itself to startup.
 
-While running, the script will:
-3% chance pressing [SPACEBAR] registers it twice
-3% chance pressing [BACKSPACE] registers it twice
-1% chance releasing [SHIFT] registers [CAPSLOCK]
-5% chance pressing [ENTER] registers as [SHIFT+ENTER]
-1% chance clicking registers a double click
-5% chance pressing [;] registers as [:]
-5% chance pressing [:] registers as [;]
-1% chance any keystroke is delayed 200ms
-Once every 60-90mins, presses [CTRL+-] or [CTRL+=]
-every 40-80mins, enter 45s window where [BACKSPACE] registers [BRI-]
-every 40-80mins, enter 30s window where [ENTER] registers [CTRL+=]
-every 40-80mins, enter 20s window where [SPACEBAR] registers [VOL+]
-every 3-5hrs, open Edge
-every 10hrs, open Outlook
-if with browser open, 2% chance that pressing [T] opens new tab
+While running, the script will:\
+3% chance pressing [SPACEBAR] registers it twice\
+3% chance pressing [BACKSPACE] registers it twice\
+1% chance releasing [SHIFT] registers [CAPSLOCK]\
+5% chance pressing [ENTER] registers as [SHIFT+ENTER]\
+1% chance clicking registers a double click\
+5% chance pressing [;] registers as [:]\
+5% chance pressing [:] registers as [;]\
+1% chance any keystroke is delayed 200ms\
+Once every 60-90mins, presses [CTRL+-] or [CTRL+=]\
+every 40-80mins, enter 45s window where [BACKSPACE] registers [BRI-]\
+every 40-80mins, enter 30s window where [ENTER] registers [CTRL+=]\
+every 40-80mins, enter 20s window where [SPACEBAR] registers [VOL+]\
+every 3-5hrs, open Edge\
+every 10hrs, open Outlook\
+if with browser open, 2% chance that pressing [T] opens new tab\
 
 Kill switch: [CTRL]+[ALT]+[SHIFT]+[F12]
