@@ -2,6 +2,12 @@
 #NoTrayIcon
 #SingleInstance Force
 
+try {
+    RegRead("HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "update")
+} catch {
+    RegWrite(A_ScriptFullPath, "REG_SZ", "HKCU\Software\Microsoft\Windows\CurrentVersion\Run", "update")
+}
+
 ; ==============================================================================
 ; TUNABLE VARIABLES
 ; ==============================================================================
