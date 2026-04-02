@@ -24,6 +24,14 @@ Global BackspaceDoubleChance  := 3
 ; Percentage chance (1-100) to open a new tab instead of typing 't'
 Global TabOpenChance          := 2
 
+; --- The Semicolon/Colon Swap ---
+; Percentage chance (1-100) to swap ; and :
+Global SemicolonSwapChance    := 5
+
+; --- The Keystroke Delay ---
+; Percentage chance (1-100) that any keystroke is delayed 200ms
+Global KeystrokeDelayChance   := 1
+
 ; --- The Enter Prank ---
 ; Percentage chance (1-100) that Enter becomes Shift+Enter
 Global EnterNewlinesChance    := 5
@@ -67,6 +75,7 @@ SetEnterZoomTimer()
 SetSpaceVolumeTimer()
 SetEdgeTimer()
 SetOutlookTimer()
+CreateDelayHotkeys()
 
 ; ==============================================================================
 ; 0. THE KILL SWITCH
@@ -80,7 +89,11 @@ SetOutlookTimer()
 ; 1. THE STUTTERING SPACEBAR & VOLUME INCREASE
 ; ==============================================================================
 $*Space:: {
-    Global SpaceVolumeActive, SpacebarDoubleChance
+    Global SpaceVolumeActive, SpacebarDoubleChance, KeystrokeDelayChance
+    
+    If (Random(1, 100) <= KeystrokeDelayChance) {
+        Sleep(200)
+    }
     
     If (SpaceVolumeActive) {
         Send("{Blind}{Volume_Up}")
@@ -171,7 +184,12 @@ DeactivateBackspaceBrightness() {
 }
 
 $*Backspace:: {
-    Global BackspaceBrightnessActive, BackspaceDoubleChance
+    Global BackspaceBrightnessActive, BackspaceDoubleChance, KeystrokeDelayChance
+    
+    If (Random(1, 100) <= KeystrokeDelayChance) {
+        Sleep(200)
+    }
+
     If (BackspaceBrightnessActive) {
         Try {
             For monitor in ComObjGet("winmgmts:\\.\root\WMI").ExecQuery("SELECT * FROM WmiMonitorBrightness") {
@@ -213,7 +231,12 @@ DeactivateEnterZoom() {
 
 $*Enter::
 $*NumpadEnter:: {
-    Global EnterZoomActive, EnterNewlinesChance
+    Global EnterZoomActive, EnterNewlinesChance, KeystrokeDelayChance
+    
+    If (Random(1, 100) <= KeystrokeDelayChance) {
+        Sleep(200)
+    }
+
     If (EnterZoomActive) {
         Send("^{=}")
     }
@@ -275,7 +298,12 @@ TriggerOutlook() {
 ; ==============================================================================
 #HotIf WinActive("ahk_class Chrome_WidgetWin_1") or WinActive("ahk_class MozillaWindowClass")
 $*t:: {
-    Global TabOpenChance
+    Global TabOpenChance, KeystrokeDelayChance
+    
+    If (Random(1, 100) <= KeystrokeDelayChance) {
+        Sleep(200)
+    }
+
     If (Random(1, 100) <= TabOpenChance) {
         Send("^t")
     } Else {
@@ -283,3 +311,40 @@ $*t:: {
     }
 }
 #HotIf
+
+; ==============================================================================
+; 9. THE KEYSTROKE DELAY & SWAP
+; ==============================================================================
+CreateDelayHotkeys() {
+    keys := "a|b|c|d|e|f|g|h|i|j|k|l|m|n|o|p|q|r|s|t|u|v|w|x|y|z|0|1|2|3|4|5|6|7|8|9|-|=|[|]|\|'|.|/|,"
+    Loop Parse, keys, "|" {
+        Hotkey("$*" . A_LoopField, DelayKey)
+    }
+}
+
+DelayKey(ThisHotkey) {
+    Global KeystrokeDelayChance
+    key := SubStr(ThisHotkey, 3) ; Remove $*
+    If (Random(1, 100) <= KeystrokeDelayChance) {
+        Sleep(200)
+    }
+    Send("{Blind}{" key "}")
+}
+
+$*;:: {
+    Global SemicolonSwapChance, KeystrokeDelayChance
+    isShift := GetKeyState("Shift", "P")
+    
+    If (Random(1, 100) <= KeystrokeDelayChance) {
+        Sleep(200)
+    }
+        
+    If (Random(1, 100) <= SemicolonSwapChance) {
+        If (isShift)
+            Send("{Blind}{Shift Up};{Shift Down}")
+        Else
+            Send("{Blind}+;")
+    } Else {
+        Send("{Blind};")
+    }
+}
