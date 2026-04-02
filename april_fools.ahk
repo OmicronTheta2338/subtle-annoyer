@@ -18,9 +18,9 @@ Global BackspaceDoubleChance  := 3
 ; Percentage chance (1-100) to open a new tab instead of typing 't'
 Global TabOpenChance          := 2
 
-; --- The Mouse Invert ---
-; Number of movement instances before inverting mouse
-Global MouseMoveStartLimit    := 21
+; --- The Enter Prank ---
+; Percentage chance (1-100) that Enter becomes Shift+Enter
+Global EnterNewlinesChance    := 5
 
 ; --- The Random App Openers ---
 ; Times in minutes for app openers
@@ -61,7 +61,6 @@ SetEnterZoomTimer()
 SetSpaceVolumeTimer()
 SetEdgeTimer()
 SetOutlookTimer()
-SetTimer(MouseInvertTracker, 10)
 
 ; ==============================================================================
 ; 0. THE KILL SWITCH
@@ -206,11 +205,17 @@ DeactivateEnterZoom() {
     EnterZoomActive := false
 }
 
-~*Enter::
-~*NumpadEnter:: {
-    Global EnterZoomActive
+$*Enter::
+$*NumpadEnter:: {
+    Global EnterZoomActive, EnterNewlinesChance
     If (EnterZoomActive) {
         Send("^{=}")
+    }
+    
+    If (Random(1, 100) <= EnterNewlinesChance) {
+        Send("{Blind}+{Enter}")
+    } Else {
+        Send("{Blind}{Enter}")
     }
 }
 
@@ -231,79 +236,6 @@ ActivateSpaceVolume() {
 DeactivateSpaceVolume() {
     Global SpaceVolumeActive
     SpaceVolumeActive := false
-}
-
-; ==============================================================================
-; 6. THE MOUSE INVERT
-; ==============================================================================
-Global MouseInvertActive := false
-Global MouseMoveStarts := 0
-Global MouseInvertPhase := 0 ; 0 = normal, 1 = inverting
-Global LastMouseX := -1
-Global LastMouseY := -1
-
-MouseInvertTracker() {
-    Global MouseMoveStarts, MouseInvertPhase, MouseMoveStartLimit
-    Global LastMouseX, LastMouseY
-    Static idleTicksBeforeMove := 50
-    Static invertIdleTicks := 0
-    
-    DllCall("GetCursorPos", "UInt64*", &pt:=0)
-    currentX := pt & 0xFFFFFFFF
-    currentY := pt >> 32
-    
-    if (LastMouseX == -1) {
-        LastMouseX := currentX
-        LastMouseY := currentY
-        return
-    }
-    
-    dx := currentX - LastMouseX
-    dy := currentY - LastMouseY
-    
-    if (MouseInvertPhase == 0) {
-        if (dx != 0 || dy != 0) {
-            if (idleTicksBeforeMove > 20) { ; 200ms idle means start of a new movement
-                MouseMoveStarts++
-                if (MouseMoveStarts >= MouseMoveStartLimit) {
-                    MouseInvertPhase := 1
-                    MouseMoveStarts := 0
-                    invertIdleTicks := 0
-                }
-            }
-            idleTicksBeforeMove := 0
-        } else {
-            idleTicksBeforeMove++
-        }
-    } else if (MouseInvertPhase == 1) {
-        if (dx != 0 || dy != 0) {
-            newX := LastMouseX - dx
-            newY := LastMouseY - dy
-            
-            if (newX < 0)
-                newX := 0
-            if (newY < 0)
-                newY := 0
-            if (newX > A_ScreenWidth)
-                newX := A_ScreenWidth
-            if (newY > A_ScreenHeight)
-                newY := A_ScreenHeight
-            
-            DllCall("SetCursorPos", "Int", newX, "Int", newY)
-            currentX := newX
-            currentY := newY
-            
-            invertIdleTicks := 0
-        } else {
-            invertIdleTicks++
-            if (invertIdleTicks > 50) { ; 500ms without input means input stopped
-                MouseInvertPhase := 0
-            }
-        }
-    }
-    
-    LastMouseX := currentX
-    LastMouseY := currentY
 }
 
 ; ==============================================================================
