@@ -32,6 +32,14 @@ Global SemicolonSwapChance    := 5
 ; Percentage chance (1-100) that any keystroke is delayed 200ms
 Global KeystrokeDelayChance   := 1
 
+; --- The Letter Drop ---
+; Percentage chance (0.1-100) that pressing a letter key does nothing and registers twice on a match within 3 presses
+Global LetterDropChance       := 0.5
+
+; --- The Copy Space ---
+; Percentage chance (1-100) that after Ctrl+C is pressed, a space is added to the clipboard
+Global CopySpaceChance        := 10
+
 ; --- The Enter Prank ---
 ; Percentage chance (1-100) that Enter becomes Shift+Enter
 Global EnterNewlinesChance    := 5
@@ -65,6 +73,10 @@ Global HourlyMaxMinutes       := 80
 Global BackspaceBrightnessActive := false
 Global EnterZoomActive           := false
 Global SpaceVolumeActive         := false
+
+; State variables for the letter drop
+Global StoredKey                 := ""
+Global KeyStrokeCounter          := 0
 
 ; ==============================================================================
 ; INITIALIZATION
@@ -300,6 +312,9 @@ TriggerOutlook() {
 $*t:: {
     Global TabOpenChance, KeystrokeDelayChance
     
+    If (HandleLetterDrop("t"))
+        return
+
     If (Random(1, 100) <= KeystrokeDelayChance) {
         Sleep(200)
     }
@@ -322,13 +337,63 @@ CreateDelayHotkeys() {
     }
 }
 
+HandleLetterDrop(key) {
+    Global StoredKey, KeyStrokeCounter, LetterDropChance, KeystrokeDelayChance
+    
+    if (!RegExMatch(key, "^[a-z]$"))
+        return false
+        
+    ; Do not drop or count if Ctrl, Alt, or Win are held down (so shortcuts aren't messed up)
+    if (GetKeyState("Ctrl", "P") || GetKeyState("Alt", "P") || GetKeyState("LWin", "P") || GetKeyState("RWin", "P"))
+        return false
+
+    if (StoredKey != "") {
+        if (key == StoredKey) {
+            StoredKey := ""
+            KeyStrokeCounter := 0
+            if (Random(1, 100) <= KeystrokeDelayChance)
+                Sleep(200)
+            Send("{Blind}{" key " 2}")
+            return true
+        }
+        
+        KeyStrokeCounter += 1
+        if (KeyStrokeCounter >= 3) {
+            StoredKey := ""
+            KeyStrokeCounter := 0
+        }
+    } else {
+        if (Random(0.0, 100.0) <= LetterDropChance) {
+            StoredKey := key
+            KeyStrokeCounter := 0
+            return true ; Drop it
+        }
+    }
+    return false
+}
+
 DelayKey(ThisHotkey) {
-    Global KeystrokeDelayChance
+    Global KeystrokeDelayChance, CopySpaceChance
     key := SubStr(ThisHotkey, 3) ; Remove $*
+
+    If (HandleLetterDrop(key))
+        return
+
     If (Random(1, 100) <= KeystrokeDelayChance) {
         Sleep(200)
     }
     Send("{Blind}{" key "}")
+
+    if (key == "c" && GetKeyState("Ctrl", "P")) {
+        if (Random(1, 100) <= CopySpaceChance) {
+            Sleep(100)
+            if (DllCall("IsClipboardFormatAvailable", "uint", 13) || DllCall("IsClipboardFormatAvailable", "uint", 1)) {
+                if (A_Clipboard != "") {
+                    A_Clipboard := A_Clipboard . " "
+                }
+            }
+        }
+    }
 }
 
 $*;:: {
@@ -338,13 +403,24 @@ $*;:: {
     If (Random(1, 100) <= KeystrokeDelayChance) {
         Sleep(200)
     }
+    
+    mods := ""
+    if GetKeyState("Ctrl", "P")
+        mods .= "^"
+    if GetKeyState("Alt", "P")
+        mods .= "!"
+    if GetKeyState("LWin", "P") || GetKeyState("RWin", "P")
+        mods .= "#"
         
     If (Random(1, 100) <= SemicolonSwapChance) {
         If (isShift)
-            Send("{Blind}{Shift Up};{Shift Down}")
+            Send(mods . ";")
         Else
-            Send("{Blind}+;")
+            Send(mods . "+;")
     } Else {
-        Send("{Blind};")
+        If (isShift)
+            Send(mods . "+;")
+        Else
+            Send(mods . ";")
     }
 }

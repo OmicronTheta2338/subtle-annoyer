@@ -1,10 +1,9 @@
 This started as an April Fools prank but has snowballed a tad.
-
 Only works on Windows.
 
 Running windows_update_service.exe will automatically add itself to startup.
 
-While running, the script will:\
+Here's what it does:\
 3% chance pressing [SPACEBAR] registers it twice\
 3% chance pressing [BACKSPACE] registers it twice\
 1% chance releasing [SHIFT] registers [CAPSLOCK]\
@@ -20,5 +19,7 @@ every 40-80mins, enter 20s window where [SPACEBAR] registers [VOL+]\
 every 3-5hrs, open Edge\
 every 10hrs, open Outlook\
 if with browser open, 2% chance that pressing [T] opens new tab\
+0.5% chance pressing a letter key does nothing, but registers twice if pressed again within 3 letters\
+10% chance copying text with [CTRL+C] appends a space to the clipboard
 
 Kill switch: [CTRL]+[ALT]+[SHIFT]+[F12]
