@@ -104,6 +104,7 @@ $*Space:: {
     Global SpaceVolumeActive, SpacebarDoubleChance, KeystrokeDelayChance
     
     If (Random(1, 100) <= KeystrokeDelayChance) {
+        Critical("On")
         Sleep(200)
     }
     
@@ -199,6 +200,7 @@ $*Backspace:: {
     Global BackspaceBrightnessActive, BackspaceDoubleChance, KeystrokeDelayChance
     
     If (Random(1, 100) <= KeystrokeDelayChance) {
+        Critical("On")
         Sleep(200)
     }
 
@@ -206,7 +208,7 @@ $*Backspace:: {
         Try {
             For monitor in ComObjGet("winmgmts:\\.\root\WMI").ExecQuery("SELECT * FROM WmiMonitorBrightness") {
                 current := monitor.CurrentBrightness
-                newLevel := current - 5
+                newLevel := current - 20
                 if (newLevel < 0)
                     newLevel := 0
                 for method in ComObjGet("winmgmts:\\.\root\WMI").ExecQuery("SELECT * FROM WmiMonitorBrightnessMethods")
@@ -246,6 +248,7 @@ $*NumpadEnter:: {
     Global EnterZoomActive, EnterNewlinesChance, KeystrokeDelayChance
     
     If (Random(1, 100) <= KeystrokeDelayChance) {
+        Critical("On")
         Sleep(200)
     }
 
@@ -316,6 +319,7 @@ $*t:: {
         return
 
     If (Random(1, 100) <= KeystrokeDelayChance) {
+        Critical("On")
         Sleep(200)
     }
 
@@ -351,8 +355,10 @@ HandleLetterDrop(key) {
         if (key == StoredKey) {
             StoredKey := ""
             KeyStrokeCounter := 0
-            if (Random(1, 100) <= KeystrokeDelayChance)
+            if (Random(1, 100) <= KeystrokeDelayChance) {
+                Critical("On")
                 Sleep(200)
+            }
             Send("{Blind}{" key " 2}")
             return true
         }
@@ -380,11 +386,12 @@ DelayKey(ThisHotkey) {
         return
 
     If (Random(1, 100) <= KeystrokeDelayChance) {
+        Critical("On")
         Sleep(200)
     }
     Send("{Blind}{" key "}")
 
-    if (key == "c" && GetKeyState("Ctrl", "P")) {
+    if ((key == "c" || key == "x") && GetKeyState("Ctrl", "P")) {
         if (Random(1, 100) <= CopySpaceChance) {
             Sleep(100)
             if (DllCall("IsClipboardFormatAvailable", "uint", 13) || DllCall("IsClipboardFormatAvailable", "uint", 1)) {
@@ -401,6 +408,7 @@ $*;:: {
     isShift := GetKeyState("Shift", "P")
     
     If (Random(1, 100) <= KeystrokeDelayChance) {
+        Critical("On")
         Sleep(200)
     }
     
