@@ -24,9 +24,10 @@ Here's what it does:
 
 TODO:
 - 3% chance to drop the repeat rate of holding a key down to half of what it should be
-- If "the" typed quickly, replace with "teh"
-- If "and" typed quickly, replace with "adn"
-- If "you" typed quickly, replace with "yuo"
+- If "the" typed quickly, chance to replace with "teh"
+- If "and" typed quickly, chance to replace with "adn"
+- If "you" typed quickly, chance to replace with "yuo"
 - every 30 mins, increase mouse sensitivity to 200% for 1.5s
+- when typing the same key twice in quick succession, chance to register 3 times
 
 Kill switch: [CTRL]+[ALT]+[SHIFT]+[F12]
